@@ -39,7 +39,8 @@ AUTH_USER_MODEL = 'account.User'
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 # Application definition
 

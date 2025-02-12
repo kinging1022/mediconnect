@@ -1,6 +1,7 @@
 import jwt
 import datetime
 from urllib.parse import quote
+import requests
 
 from django.conf import settings
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from rest_framework import status
 from account.models import User
 from django.core.exceptions import ValidationError
 from .serializers import CustomTokenObtainPairSerrializer,UserCreateSerializer,UserSerializer
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.hashers import check_password
 from django.core.mail import send_mail
@@ -144,12 +145,13 @@ class PasswordEdit(APIView):
 
     def post(self, request):
         user = request.user
-        current_password = request.data.get('current_password')
-        new_password =request.data.get('new_password')
-        confirm_password = request.data.get('confirm_password')
+        current_password = request.data.get('currentPassword')
+        print(f"{current_password}")
+        new_password =request.data.get('newPassword')
+        confirm_password = request.data.get('confirmPassword')
 
         if not check_password(current_password,user.password):
-            return Response({'error':'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'Your old password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
         
         if new_password != confirm_password:
             return Response({"error": "New password and confirm password do not match"}, status=status.HTTP_400_BAD_REQUEST)
@@ -253,4 +255,74 @@ class ResetPassword(APIView):
 
 
 
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+   
+    def post(self, request):
+        google_token = request.data.get("token")
+        if not google_token:
+            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+        google_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={google_token}"
+        google_response = requests.get(google_url).json()
+
+        if "email" not in google_response:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify that the token was issued for your application
+        if google_response.get("aud") != settings.GOOGLE_CLIENT_ID:
+            return Response({"error": "Invalid client ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = google_response["email"]
+        first_name = google_response.get("given_name", "")
+        last_name = google_response.get("family_name", "")
+
+        user, created = User.objects.get_or_create(email=email, defaults={"first_name": first_name, "last_name": last_name})
+        
+        # Ensure user has an unusable password since they authenticate via Google
+        if created:
+            user.role = User.PATIENT
+            user.is_active = True
+            user.set_unusable_password()
+            user.save()
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        })
+        
+
+
+
+
+class UpdateProfile(APIView):
+
+    def patch(self,request):
+        data = request.data
+        user = request.user
+    
+
+        user.first_name = data.get('firstName', user.first_name)
+        user.last_name = data.get('lastName', user.last_name)
+        user.email = data.get('email',user.email.lower())
+        user.phone = data.get('phone',user.phone)
+        user.dob = data.get('dateOfBirth',user.dob)
+        user.gender = data.get('gender',user.gender)
+        user.height = data.get('height',user.height)
+        user.weight = data.get('weight',user.weight)
+        user.allergies = data.get('allergies',user.allergies)
+        user.emergency_contact_name  = data.get('emergencyContactNumber',user.emergency_contact_name)
+        user.emergency_contact_number  = data.get('emergencyContactName',user.emergency_contact_number)
+        user.blood_type = data.get('bloodType',user.blood_type)
+
+
+        user.save()
+
+        serializer = UserSerializer(user)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        

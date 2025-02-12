@@ -15,6 +15,7 @@ mediconnect_frontend/dist-ssr
 mediconnect_frontend/coverage
 mediconnect_frontend/cypress/videos/
 mediconnect_frontend/cypress/screenshots/
+mediconnect_frontend/.env
 
 # Backend specific
 # Python cache files

@@ -1,59 +1,66 @@
 import './assets/main.css'
-
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { useUserStore } from './stores/user'
-
+import googleLogin from 'vue3-google-login'
 import App from './App.vue'
 import router from './router'
 import axios from 'axios'
 
-axios.defaults.baseURL = 'http://127.0.0.1:8000/api/'
+// Configuration constants
+const API_BASE_URL = 'http://127.0.0.1:8000/api/'
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
+// Configure axios defaults
+axios.defaults.baseURL = API_BASE_URL
+
+// Create and configure Vue app
 const app = createApp(App)
-
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
+app.use(googleLogin, {
+  clientId: GOOGLE_CLIENT_ID,
+  scope: 'email profile',
+  prompt: 'select_account'
+})
 
-const userStore = useUserStore(); 
+// Initialize store after Pinia is installed
+const userStore = useUserStore()
 
-// Request interceptor to attach access token
+// Configure axios interceptors
 axios.interceptors.request.use(
-    (config) => {
-        const token = userStore.user.access; 
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+  (config) => {
+    const token = userStore.user.access
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
-);
+    return config
+  },
+  (error) => Promise.reject(error)
+)
 
-// Response interceptor to handle token refresh and expiration
 axios.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-            
-            try {
-                await userStore.refreshToken(); 
-                originalRequest.headers['Authorization'] = `Bearer ${userStore.user.access}`;
-                return axios(originalRequest); 
-            } catch (error) {
-                userStore.removeToken();
-                alert('Your session has expired. Please log in again.');
-
-                router.push('/login');
-            }
-        }
-        return Promise.reject(error);
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      
+      try {
+        await userStore.refreshToken()
+        originalRequest.headers.Authorization = `Bearer ${userStore.user.access}`
+        return axios(originalRequest)
+      } catch (refreshError) {
+        userStore.removeToken()
+        router.push('/login')
+        throw refreshError // Allow error handling up the chain
+      }
     }
-);
+    
+    return Promise.reject(error)
+  }
+)
 
 app.mount('#app')
-
-

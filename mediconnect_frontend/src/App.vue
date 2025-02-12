@@ -13,19 +13,26 @@
           MediConnect
         </RouterLink>
         <nav class="hidden md:flex space-x-8">
-          <a v-for="link in navLinks" :key="link.href" :href="link.href" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 font-medium">
-            {{ link.text }}
-          </a>
-        </nav>
+        <RouterLink  
+          v-for="link in filteredNavLinks" 
+          :key="link.href" 
+          :to="link.href" 
+          class="text-gray-600 hover:text-blue-600 transition-colors duration-300 font-medium">
+          {{ link.text }}
+        </RouterLink>
+      </nav>
+
+        <template v-if="!userStore.user.isAuthenticated">
         <div class="hidden md:flex space-x-4 items-center">
           <RouterLink to="/login" class="text-gray-600 hover:text-blue-600 font-medium">
             Sign in
           </RouterLink>
-          <button @click="logout" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center">
+          <RouterLink to="/signup" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center">
             Get Started
             <ChevronRight class="ml-2 w-4 h-4" />
-          </button>
+          </RouterLink>
         </div>
+        </template>
         <button
           class="md:hidden text-gray-600 hover:text-blue-600"
           @click="isOpen = true"
@@ -49,15 +56,16 @@
           </button>
         </div>
         <nav class="space-y-6">
-          <a 
+          <RouterLink
             v-for="link in navLinks" 
             :key="link.href" 
-            :href="link.href" 
+            :to="link.href" 
             class="block text-xl font-medium text-gray-800 hover:text-blue-600"
             @click="isOpen = false"
           >
             {{ link.text }}
-          </a>
+          </RouterLink>
+          <template v-if="!userStore.user.isAuthenticated">
           <div class="pt-6 space-y-4">
             <RouterLink to="/login" class="w-full text-gray-600 py-2 font-medium">
               Sign in
@@ -66,6 +74,7 @@
               Get Started
             </RouterLink>
           </div>
+        </template>
         </nav>
       </div>
     </div>
@@ -129,12 +138,23 @@ export default {
     ChevronRight,
     Toast
   },
+  computed:{
+    filteredNavLinks() {
+    if (this.userStore.user.isAuthenticated) {
+      return this.navLinks;
+    } else {
+      return this.navLinks.filter(link => link.href !== '/dashboard');
+    }
+  }
+
+  },
   data() {
     return {
       isOpen: false,
       scrolled: false,
       userStore: useUserStore(),
       navLinks: [
+        {href: '/dashboard', text:'Dashboard'},
         { href: '#features', text: 'Features' },
         { href: '#how-it-works', text: 'How it works' },
         { href: '#testimonials', text: 'Testimonials' },

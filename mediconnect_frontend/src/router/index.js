@@ -6,6 +6,8 @@ import DashboardView from '@/views/DashboardView.vue'
 import AccountActivate from '@/views/AccountActivate.vue'
 import ForgotPasswordResetView from '@/views/ForgotPasswordResetView.vue'
 import PasswordReset from '@/views/PasswordReset.vue'
+import updateProfileView from '@/views/updateProfileView.vue'
+import UpdateProfileView from '@/views/updateProfileView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -51,6 +53,11 @@ const router = createRouter({
       path: '/reset-password/:token',
       name: 'edit-password',
       component: PasswordReset,
+    },
+    {
+      path: '/dashboard/profile/update',
+      name: 'update-profile',
+      component: UpdateProfileView,
     },
     
   ],

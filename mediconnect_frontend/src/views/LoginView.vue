@@ -73,9 +73,8 @@
             </div>
           </div>
           <div class="mt-6 grid grid-cols-2 gap-3">
-            <button class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-              Google
-            </button>
+            <GoogleLogin :callback="handleGoogleLogin" />
+
             <button class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
               Apple
             </button>
@@ -92,6 +91,7 @@
   
   <script>
   import { Mail, Lock, Eye, EyeOff } from 'lucide-vue-next'
+  import { GoogleLogin } from "vue3-google-login";
   import axios from "axios";
   import {useUserStore} from '@/stores/user'
   import { useToastStore } from "@/stores/toast";  
@@ -103,7 +103,9 @@
       Mail,
       Lock,
       Eye,
-      EyeOff
+      EyeOff,
+      GoogleLogin
+      
     },
     data() {
       return {
@@ -169,6 +171,22 @@
           console.error(error);
         }
       },
+      async handleGoogleLogin(response) {
+      try {
+        const { data } = await axios.post("auth/google/", {
+          token: response.credential,
+        });
+
+        this.userStore.setToken(data)
+        await this.fetchUser()
+        this.$router.push('/dashboard')
+        
+
+        console.log("Login successful", data);
+      } catch (error) {
+        console.error("Login failed", error);
+      }
+    },
 
     }
   }

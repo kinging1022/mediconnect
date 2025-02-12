@@ -10,10 +10,21 @@ export const useUserStore = defineStore("user", {
       email: null,
       gender:null,
       role:null,
+      phone:null,
+      dob:null,
+      display_age: null,
+      weight:null,
+      height:null,
+      allergies: null,
+      emergency_contact_number : null,
+      emergency_contact_name: null,
+      blood_type: null,
+      speciality:null,
       access: null,
       refresh: null,
     },
   }),
+        
 
   actions: {
 
@@ -43,10 +54,20 @@ export const useUserStore = defineStore("user", {
         first_name: null,
         last_name: null,
         email: null,
+        role: null,
+        gender:null,
+        phone:null,
+        dob:null,
+        display_age: null,
+        weight:null,
+        height:null,
+        allergies: null,
+        emergency_contact_number : null,
+        emergency_contact_name: null,
+        blood_type: null,
+        speciality:null,
         access: null,
         refresh: null,
-        role: null,
-        gender:null
       };
       localStorage.removeItem("user");
     },
@@ -71,6 +92,7 @@ export const useUserStore = defineStore("user", {
     saveUserToLocalStorage() {
       localStorage.setItem("user", JSON.stringify(this.user));
     },
+    
   },
 });
 

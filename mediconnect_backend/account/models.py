@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager,PermissionsMixin
 import uuid
+from datetime import date , datetime
 
 
 # Create your models here.
@@ -46,17 +47,39 @@ class User(AbstractBaseUser,PermissionsMixin):
     email = models.EmailField(unique=True, max_length=225)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    phone = models.CharField(max_length=100, blank=True, null=True)
+    speciality = models.CharField(max_length=100, blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=100, blank=True, null=True)
     height = models.CharField(max_length=20, blank=True, null=True)
     weight = models.CharField(max_length=20, null=True, blank=True)
     allergies = models.CharField(max_length=500, blank=True, null=True)
-    emergency_contact = models.CharField(max_length=20, blank=True, null=True)
+    emergency_contact_name = models.CharField(max_length=20, blank=True, null=True)
+    emergency_contact_number = models.CharField(max_length=20, blank=True, null=True)
     blood_type = models.CharField(max_length=10,blank=True,null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=PATIENT)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+
+    
+
+    def display_age(self):
+        if self.dob:
+            try:
+                if isinstance(self.dob, str):
+                    dob_date = datetime.strptime(self.dob, '%Y-%m-%d').date()
+                else:
+                    dob_date = self.dob
+
+                today = date.today()
+                age = today.year - dob_date.year -((today.month, today.day) < (dob_date.month, dob_date.day))
+                return age
+            except (ValueError, TypeError):
+                return None
+            
+
+        return None
 
 
 
