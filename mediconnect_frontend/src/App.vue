@@ -123,6 +123,7 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { useUserStore } from "./stores/user";
 import Toast from "@/components/Toast.vue";
+import { useAppointmentStore } from './stores/appointment';
 
 import {  
   Menu,
@@ -153,6 +154,7 @@ export default {
       isOpen: false,
       scrolled: false,
       userStore: useUserStore(),
+      appointmentStore: useAppointmentStore(),
       navLinks: [
         {href: '/dashboard', text:'Dashboard'},
         { href: '#features', text: 'Features' },
@@ -192,6 +194,7 @@ export default {
   mounted() {
     window.addEventListener('scroll', this.handleScroll)
     this.userStore.initStore();
+    this.appointmentStore.hydrate();
 
   },
   beforeUnmount() {

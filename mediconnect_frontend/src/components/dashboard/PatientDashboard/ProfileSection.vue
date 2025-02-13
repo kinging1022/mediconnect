@@ -34,7 +34,13 @@
         </div>
         <div class="flex flex-wrap justify-center md:justify-end gap-2 mt-4 md:mt-0">
           <RouterLink :to="{ name: 'update-profile' }" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">Edit Profile</RouterLink>
-          <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">Book Appointment</button>
+          <RouterLink
+            :to="latestAppointment && latestAppointment.status !== 'done' ? null : { name: 'appointment' }"
+            :class="{ 'disabled-link': latestAppointment && latestAppointment.status !== 'done' }"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+              Book Appointment
+          </RouterLink>
           <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">Chat with AI Doctor</button>
           <button @click="$emit('logout')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Logout</button>
         </div>
@@ -44,14 +50,35 @@
 </template>
 
 <script>
+import { useAppointmentStore } from '@/stores/appointment';
 export default {
   name: 'ProfileSection',
+  setup() {
+    const appointmentStore = useAppointmentStore();
+    return { appointmentStore };
+  },
+  computed: {
+    // Get latest appointment
+    latestAppointment() {
+      return this.appointmentStore.appointments.length > 0
+        ? this.appointmentStore.appointments[0]
+        : null;
+    },
+  },
   props: {
     patient: {
       type: Object,
       required: true,
     },
   },
+  
 };
 </script>
-
+<style>
+/* Disable the link when the class is applied */
+.disabled-link {
+  pointer-events: none;  /* Prevent clicking */
+  opacity: 0.5;         /* Make it look disabled */
+  background-color: gray !important; /* Change color */
+}
+</style>

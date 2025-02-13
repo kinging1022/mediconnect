@@ -6,7 +6,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfileSection :patient="patient" @logout="logout" />
         <VitalsSection :vitals="patient.vitals" />
-        <AppointmentsSection :appointments="appointments" />
+        <AppointmentsSection :appointments="appointments" :format-date="formatDate"/>
         <MedicationsSection :medications="medications" />
         <ConsultationsSection :consultations="consultations" />
       </div>
@@ -15,7 +15,9 @@
 </template>
 
 <script>
+import { parseISO, format } from 'date-fns';
 import { useUserStore } from "@/stores/user";
+import { useAppointmentStore } from "@/stores/appointment";
 import AppHeader from "./AppHeader.vue";
 import ProfileSection from "./PatientDashboard/ProfileSection.vue";
 import VitalsSection from "./PatientDashboard/VitalsSection.vue";
@@ -35,23 +37,16 @@ export default {
   },
   setup() {
     const userStore = useUserStore();
-    return { userStore };
+    const appointmentStore = useAppointmentStore();
+    return { userStore, appointmentStore };
+  },
+  mounted(){
+    this.appointmentStore.initWebSocket(this.appointments)
   },
   data() {
     return {
       patient: this.getPatientData(),
-      appointments: [
-        { doctor: "Dr. Smith", date: "2023-06-15", time: "10:00 AM", type: "General Checkup", status: "confirmed" },
-        { doctor: "Dr. Johnson", date: "2023-06-20", time: "2:00 PM", type: "Follow-up", status: "pending" }
-      ],
-      consultations: [
-        { doctor: "Dr. Brown", date: "2023-05-10", summary: "Routine checkup, all vitals normal." },
-        { doctor: "Dr. Davis", date: "2023-04-22", summary: "Prescribed medication for mild hypertension." }
-      ],
-      medications: [
-        { name: "Lisinopril", dosage: "10mg", frequency: "Once daily" },
-        { name: "Metformin", dosage: "500mg", frequency: "Twice daily" }
-      ]
+      appointments: []
     };
   },
   methods: {
@@ -84,8 +79,18 @@ export default {
 
       return patientData;
     },
+    
+    formatDate(dateString) {
+      try {
+        return format(parseISO(dateString), 'MMMM dd, yyyy - hh:mm a'); 
+      } catch (error) {
+        console.error('Date parsing error:', error);
+        return 'Invalid Date';
+      }
+    },
     logout() {
       this.userStore.removeToken();
+      this.appointmentStore.clearAppointments();
       this.$router.push('/');
     }
   }

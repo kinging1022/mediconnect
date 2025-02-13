@@ -72,6 +72,15 @@ REST_FRAMEWORK = {
 }
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis connection
+        },
+    },
+}
+
 
 
 
@@ -82,6 +91,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne", 
     'django.contrib.staticfiles',
     
     #CORS
@@ -93,6 +103,11 @@ INSTALLED_APPS = [
 
     #App
     'account',
+    'appointment',
+
+    #Others 
+    "channels",
+
 
 ]
 
@@ -126,6 +141,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mediconnect_backend.wsgi.application'
+ASGI_APPLICATION = "mediconnect_backend.asgi.application"
 
 
 # Database

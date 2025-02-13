@@ -27,6 +27,7 @@ mediconnect_frontend/.env
 *.py[cod]
 *$py.class
 __pycache__/
+*.rdb
 
 mediconnect_backend/media/
 mediconnect_backend/db.sqlite3
