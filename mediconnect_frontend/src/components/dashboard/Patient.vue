@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-    <AppHeader />
 
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -18,17 +17,16 @@
 import { parseISO, format } from 'date-fns';
 import { useUserStore } from "@/stores/user";
 import { useAppointmentStore } from "@/stores/appointment";
-import AppHeader from "./AppHeader.vue";
+import { useNotificationStore } from '@/stores/notification';
 import ProfileSection from "./PatientDashboard/ProfileSection.vue";
 import VitalsSection from "./PatientDashboard/VitalsSection.vue";
 import AppointmentsSection from "./PatientDashboard/AppointmentsSection.vue";
-import MedicationsSection from "./PatientDashboard/MedicationsSection.vue";
+import MedicationsSection from './PatientDashboard/MedicationsSection.vue';
 import ConsultationsSection from "./PatientDashboard/ConsultationsSection.vue";
 
 export default {
   name: 'PatientDashboard',
   components: {
-    AppHeader,
     ProfileSection,
     VitalsSection,
     AppointmentsSection,
@@ -38,15 +36,22 @@ export default {
   setup() {
     const userStore = useUserStore();
     const appointmentStore = useAppointmentStore();
-    return { userStore, appointmentStore };
+    const notificationStore = useNotificationStore();
+    return { userStore, appointmentStore, notificationStore };
   },
   mounted(){
-    this.appointmentStore.initWebSocket(this.appointments)
+    this.appointmentStore.initWebSocket()
+
+  },
+  computed:{
+    appointments(){
+        return this.appointmentStore.appointments
+    }
+    
   },
   data() {
     return {
       patient: this.getPatientData(),
-      appointments: []
     };
   },
   methods: {
@@ -91,6 +96,7 @@ export default {
     logout() {
       this.userStore.removeToken();
       this.appointmentStore.clearAppointments();
+      this.notificationStore.clearNotifications()
       this.$router.push('/');
     }
   }

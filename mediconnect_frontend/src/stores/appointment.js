@@ -3,53 +3,81 @@ import { useUserStore } from './user';
 
 export const useAppointmentStore = defineStore('appointment', {
   state: () => ({
-    appointments: [], 
+    appointments: [],
+    wsConnection: null,
   }),
 
   actions: {
-    hydrate() {
-      const savedAppointments = localStorage.getItem('appointments');
-      if (savedAppointments) {
-        this.appointments = JSON.parse(savedAppointments);
+    async initWebSocket() {
+      const userStore = useUserStore();
+      let token = userStore.user.access;
+      let userType = userStore.user.role;
+      let userId = userStore.user.id;
+
+      // Close existing connection before creating a new one
+      if (this.wsConnection) {
+        this.wsConnection.close();
       }
+
+      this.wsConnection = new WebSocket(
+        `ws://localhost:8000/ws/appointments/${userType}/${userId}/?token=${token}`
+      );
+
+      this.wsConnection.onopen = () => {
+        console.log('WebSocket Connected');
+      };
+
+      this.wsConnection.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        console.log('WebSocket message received:', data);
+
+        switch (data.event) {
+          case 'list_appointments':
+            console.log(data.data)
+            this.updateAppointments(data.data);
+            break;
+
+          case 'new_appointment':
+            this.addNewAppointment(data.data);
+            break;
+
+          case 'update_appointment':
+            this.updateAppointmentStatus(data.data);
+            break;
+        }
+      };
+
+      this.wsConnection.onerror = (error) => {
+        console.error('WebSocket Error:', error);
+      };
+
+      this.wsConnection.onclose = () => {
+        console.log('WebSocket Disconnected');
+        setTimeout(() => this.initWebSocket(), 5000); // Reconnect after 5 seconds
+      };
     },
 
     updateAppointments(newAppointments) {
       this.appointments = newAppointments;
-      localStorage.setItem('appointments', JSON.stringify(newAppointments)); 
     },
 
-    initWebSocket(appointmentsArray) {
-      const userStore = useUserStore(); 
-      const token = userStore.user.access;
-      const ws = new WebSocket(`ws://localhost:8000/ws/appointments/?token=${token}`);
+    addNewAppointment(appointment) {
+      this.appointments.push(appointment);
+    },
 
-      ws.onopen = () => {
-        ws.send(
-          JSON.stringify({
-            action: "list",
-            request_id: new Date().getTime(),
-          })
-        );
-      };
-
-      ws.onmessage = (e) => {
-        const allData = JSON.parse(e.data);
-
-        if (allData.action === 'list') {
-          appointmentsArray.splice(0, appointmentsArray.length, ...allData.data); 
-          this.updateAppointments(allData.data); 
-
-        } else if (allData.action === "create") {
-          appointmentsArray.push(allData.data);
-          this.updateAppointments([...appointmentsArray]); 
-        }
-      };
+    updateAppointmentStatus(updatedAppointment) {
+      const index = this.appointments.findIndex((app) => app.id === updatedAppointment.id);
+      if (index !== -1) {
+        this.appointments[index] = { ...this.appointments[index], ...updatedAppointment };
+      }
     },
 
     clearAppointments() {
       this.appointments = [];
-      localStorage.removeItem('appointments');
+      if (this.wsConnection) {
+        this.wsConnection.close();
+        this.wsConnection = null;
+      }
     },
   },
 });

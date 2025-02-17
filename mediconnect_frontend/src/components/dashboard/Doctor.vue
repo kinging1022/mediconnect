@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-    <AppHeader />
 
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -18,7 +17,6 @@ import { parseISO, format } from 'date-fns';
 
 import { useUserStore } from "@/stores/user";
 import { useAppointmentStore } from "@/stores/appointment";
-import AppHeader from "./AppHeader.vue";
 import DoctorProfileSection from "./DoctorDashboard/DoctorProfileSection.vue";
 import AppointmentsSection from "./DoctorDashboard/AppointmentsSection.vue";
 import PatientsSection from "./DoctorDashboard/PatientsSection.vue";
@@ -27,7 +25,6 @@ import ScheduleSection from "./DoctorDashboard/ScheduleSection.vue";
 export default {
   name: 'DoctorDashboard',
   components: {
-    AppHeader,
     DoctorProfileSection,
     AppointmentsSection,
     PatientsSection,
@@ -39,12 +36,17 @@ export default {
     return { userStore , appointmentStore };
   },
   mounted(){
-    this.appointmentStore.initWebSocket(this.appointments)
+    this.appointmentStore.initWebSocket()
+  },
+  computed:{
+    appointments(){
+      return this.appointmentStore.appointments
+    }
+
   },
   data() {
     return {
       doctor: this.getDoctorData(),
-      appointments:[],
       
     };
   },

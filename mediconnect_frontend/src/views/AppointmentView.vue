@@ -48,37 +48,12 @@
   
           <!-- Booking new appointment -->
           <div v-if="status === 'booking'" class="space-y-6 animate-fade-in">
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Preferred Date
-                </label>
-                <div class="relative">
-                  <input
-                    type="date"
-                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                  <calendar-icon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Preferred Time
-                </label>
-                <div class="relative">
-                  <input
-                    type="time"
-                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                  <clock-icon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-            </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Reason for Visit
               </label>
               <textarea
+                v-model="symptoms"
                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-24"
                 placeholder="Please describe your symptoms or reason for visit"
               ></textarea>
@@ -244,6 +219,7 @@
     data() {
       return {
         appointmentType: null,
+        symptoms: null,
         status: 'selecting',
         isProcessing: false,
         progress: 0,
@@ -302,11 +278,20 @@
         
       },
       async handleNewAppointmentSubmit() {
-        this.isProcessing = true
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        this.status = 'success'
-        this.isProcessing = false
-        this.progress = 20
+        try{
+            this.isProcessing = true
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            const response = await axios.post('appointment/',{type:'new',symptoms: this.symptoms})
+            if(response.status === 200){
+                this.status = 'success'
+                this.isProcessing = false
+                this.progress = 20
+
+            }
+
+        }catch(error){
+            console.error(error)
+        }
       },
       resetBooking() {
         this.appointmentType = null

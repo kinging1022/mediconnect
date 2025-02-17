@@ -95,6 +95,7 @@
   import axios from "axios";
   import {useUserStore} from '@/stores/user'
   import { useToastStore } from "@/stores/toast";  
+  import { useNotificationStore } from '@/stores/notification';
 
   
   export default {
@@ -116,7 +117,8 @@
         },
         isLoading: false,
         userStore: useUserStore(),
-        toastStore: useToastStore()
+        toastStore: useToastStore(),
+        notificationStore: useNotificationStore(),
       }
     },
     methods: {
@@ -134,6 +136,7 @@
             await this.fetchUser()
             this.isLoading = false
             this.$router.push('/dashboard')
+            this.notificationStore.initWebSocket()
             this.toastStore.showToast(5000, `welcome back ${this.userStore.user.first_name}`, 'bg-blue-700 text-white');
 
 
