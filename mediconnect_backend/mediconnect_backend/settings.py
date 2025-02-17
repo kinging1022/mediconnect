@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+from kombu import Queue, Exchange
 
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 import os
 from dotenv import load_dotenv
@@ -74,11 +76,42 @@ REST_FRAMEWORK = {
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "BACKEND":"channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [("127.0.0.1", 6379)],  # Redis connection
         },
     },
+}
+
+CELERY_BROKER_URL = "redis://localhost:6379/0" 
+CELERY_TIMEZONE = 'UTC'
+CELERY_ACCEPT_CONTENT = ['json']               
+CELERY_TASK_SERIALIZER = 'json'  
+
+
+# Define separate queues
+
+CELERY_TASK_QUEUES = (
+    Queue('ml_tasks', Exchange('celery', type='direct'), routing_key='ml_tasks.#'),
+    Queue('regular_tasks', Exchange('celery', type='direct'), routing_key='regular_tasks.#'),
+)
+
+# Add routing to specify which tasks go to which queues
+CELERY_TASK_ROUTES = {
+    'appointment.ml_tasks.*': {'queue': 'ml_tasks'},
+    # Add other task routes for regular_tasks here
+    'your.regular.tasks.*': {'queue': 'regular_tasks'},
+}
+
+
+CELERY_BEAT_SCHEDULE = {
+    'process-appointment': {
+        'task': 'appointment.ml_tasks.process_appointments',
+        'schedule': crontab(minute="*/1"),  
+        'options': {'queue': 'ml_tasks'}
+    },
+    
+    
 }
 
 
@@ -93,6 +126,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     "daphne", 
     'django.contrib.staticfiles',
+
+    #celery
+    "django_celery_beat",
     
     #CORS
     'corsheaders',
@@ -104,8 +140,10 @@ INSTALLED_APPS = [
     #App
     'account',
     'appointment',
+    'notification',
+    'session',
 
-    #Others 
+    #Channels
     "channels",
 
 
@@ -190,6 +228,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

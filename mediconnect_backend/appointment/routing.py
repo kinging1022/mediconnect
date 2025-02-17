@@ -1,6 +1,7 @@
 from django.urls import re_path
-from .consumner import AppointmentConsumer
+from .consumer import AppointmentConsumer
 
 websocket_urlpatterns = [
-    re_path(r"ws/appointments/$",AppointmentConsumer.as_asgi())
+    re_path(r"ws/appointments/(?P<user_type>\w+)/(?P<user_id>[\w-]+)/$", AppointmentConsumer.as_asgi()),
+
 ]
