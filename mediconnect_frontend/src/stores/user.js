@@ -23,6 +23,7 @@ export const useUserStore = defineStore("user", {
       access: null,
       refresh: null,
     },
+    activeSession: {},
   }),
         
 
@@ -69,25 +70,61 @@ export const useUserStore = defineStore("user", {
         access: null,
         refresh: null,
       };
+      this.activeSession = {};
       localStorage.removeItem("user");
     },
 
     async refreshToken() {
+      if (!this.user.refresh) {
+        this.removeToken();
+        throw new Error("No refresh token available");
+      }
+      
       try {
         const response = await axios.post("auth/token/refresh/", {
           refresh: this.user.refresh,
+        }, {
+          // Important: don't use the interceptors for this request to avoid loops
+          _skipAuthRefresh: true
         });
-        this.user.access = response.data.access;
-        this.saveUserToLocalStorage();
-      } catch (error) {
-        if (error.response && error.response.status === 400) {
-          console.log("Refresh token expired or invalid. Logging out.");
-          this.removeToken();
+        
+        if (response.data && response.data.access) {
+          this.user.access = response.data.access;
+          this.saveUserToLocalStorage();
+          return response.data.access;
         } else {
-          throw new Error("Token refresh failed");
+          throw new Error("Invalid refresh token response");
         }
+      } catch (error) {
+        console.log("Refresh token expired or invalid. Logging out.");
+        this.removeToken();
+        throw error;
       }
     },
+    
+    async getActiveSession() {
+
+      try{
+            const response = await axios.get('session/active/')
+            this.activeSession = response.data
+            console.log('active id',response.data.id)
+            this.activeSessionStatus = response.data.status
+            
+            
+      }catch(error){
+        if (error){
+          this.activeSession = {}
+          this.activeSessionStatus = null
+        }
+
+      }
+
+
+  },
+  clearActiveSession(){
+    this.activeSession = {}
+
+  },
 
     saveUserToLocalStorage() {
       localStorage.setItem("user", JSON.stringify(this.user));

@@ -9,6 +9,9 @@ import PasswordReset from '@/views/PasswordReset.vue'
 import UpdateProfileView from '@/views/updateProfileView.vue'
 import AppointmentView from '@/views/AppointmentView.vue'
 import NotificationView from '@/views/NotificationView.vue'
+import ChatSessionView from '@/views/ChatSessionView.vue'
+import { useUserStore } from '@/stores/user'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -70,8 +73,30 @@ const router = createRouter({
       name: 'notification',
       component: NotificationView,
     },
+    {
+      path: '/session/:id',
+      name: 'session',
+      component: ChatSessionView,
+      meta: { requiresAuth: true, hideHeaderFooter: true }
+
+    },
+   
     
   ],
 })
 
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore()
+  const isAuthenticated = userStore.user.isAuthenticated
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login')
+  } else if (to.meta.guestOnly && isAuthenticated) {
+    next('/dashboard')
+  } else {
+    next()
+  }
+})
+
 export default router
+

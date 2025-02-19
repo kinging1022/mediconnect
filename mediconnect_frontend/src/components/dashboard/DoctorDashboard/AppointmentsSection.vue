@@ -32,10 +32,12 @@
                   class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors duration-300"
                 >
                   Symptoms
-                </button>
-                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                </button> 
+                <button 
+                @click="startSession(appointment.id)"
+                class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
                   <MessageSquare class="w-4 h-4" />
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -63,7 +65,7 @@
   
   <script>
   import { Calendar, Clock, MessageSquare } from 'lucide-vue-next';
-  
+  import axios from 'axios';
   export default {
     name: 'DoctorAppointments',
     components: {
@@ -96,6 +98,22 @@
       closeModal() {
         this.isModalOpen = false;
       },
+      async startSession(id){
+
+        try{
+            const response = await axios.post('session/start/', {
+            appointmentId: id,
+            });
+            if (response.status === 200) {
+              this.$router.push(`/session/${response.data.id}`)
+            
+            } 
+
+        }catch(error){
+          console.error(error)
+        }
+
+      }
     },
   };
   </script>

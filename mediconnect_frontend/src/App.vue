@@ -1,6 +1,7 @@
 <template>
   <div class="w-full min-h-screen bg-white mt-7">
     <header
+    v-if="!$route.meta.hideHeaderFooter"
       :class="[
         'w-full px-4 fixed top-0 z-50 transition-all duration-300',
         scrolled ? 'py-2 bg-white/90 backdrop-blur-sm shadow-sm' : 'py-4 bg-transparent'
@@ -29,10 +30,17 @@
           </div>
           </RouterLink>
           
-          <div class="relative">
-            <User :size="24" class="text-gray-600 hover:text-blue-600 cursor-pointer" />
-            <div v-if="userStore.user.isAuthenticated" class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
-          </div>
+          <RouterLink 
+              v-if="sessionId"
+              :to="{ name: 'session', params: { id: sessionId } }"
+            >
+              <div class="relative">
+                <User :size="24" class="text-gray-600 hover:text-blue-600 cursor-pointer" />
+                <div v-if="sessionId" class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
+              </div>
+        </RouterLink>
+
+          
           <template v-if="!userStore.user.isAuthenticated">
             <RouterLink to="/login" class="hidden md:inline-block text-gray-600 hover:text-blue-600 font-medium">
               Sign in
@@ -94,7 +102,9 @@
     </section>
     <Toast />
 
-    <footer class="w-full px-4 py-12 bg-gray-900 text-gray-300">
+    <footer 
+    v-if="!$route.meta.hideHeaderFooter"
+    class="w-full px-4 py-12 bg-gray-900 text-gray-300">
       <div class="max-w-7xl mx-auto">
         <div class="grid md:grid-cols-4 gap-8 mb-12">
           <div>
@@ -173,6 +183,9 @@ export default {
     hasNotifications() {
     return this.notificationStore.hasUnreadNotifications
     },
+    sessionId() {
+      return this.userStore.activeSession.id || null;
+    },
 
   },
   data() {
@@ -217,9 +230,11 @@ export default {
   mounted() {
     window.addEventListener('scroll', this.handleScroll)
     this.userStore.initStore();
+    this.userStore.getActiveSession();
     if(this.userStore.user.access){
       this.notificationStore.initWebSocket()
     }
+
    
   },
   beforeUnmount() {

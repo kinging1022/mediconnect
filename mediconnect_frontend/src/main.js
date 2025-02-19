@@ -31,36 +31,52 @@ const userStore = useUserStore()
 // Configure axios interceptors
 axios.interceptors.request.use(
   (config) => {
-    const token = userStore.user.access
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    // Skip authentication for refresh token requests
+    if (config._skipAuthRefresh) {
+      return config;
     }
-    return config
+    
+    const token = userStore.user.access;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
   (error) => Promise.reject(error)
-)
+);
+
 
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error.config;
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+    // Only attempt refresh if it's a 401 error, not already retried, and we have a refresh token
+    if (error.response?.status === 401 && !originalRequest._retry && userStore.user.refresh) {
+      originalRequest._retry = true;
       
       try {
-        await userStore.refreshToken()
-        originalRequest.headers.Authorization = `Bearer ${userStore.user.access}`
-        return axios(originalRequest)
+        const newAccessToken = await userStore.refreshToken();
+        if (newAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return axios(originalRequest);
+        } else {
+          // If refreshToken() returns falsy value, handle as expired session
+          throw new Error("Failed to refresh token");
+        }
       } catch (refreshError) {
-        userStore.removeToken()
-        router.push('/login')
-        throw refreshError // Allow error handling up the chain
+        console.error("Session expired, redirecting to login:", refreshError);
+        userStore.removeToken();
+        router.push('/login');
+        return Promise.reject(refreshError);
       }
     }
     
-    return Promise.reject(error)
+    // Handle other errors or retried 401s that still failed
+    return Promise.reject(error);
   }
-)
+);
+
+
 
 app.mount('#app')

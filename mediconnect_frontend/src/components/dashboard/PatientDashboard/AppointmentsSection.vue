@@ -21,7 +21,8 @@
             'px-2 py-1 rounded-full text-xs font-semibold',
             appointment.status === 'processed' ? 'bg-yellow-100 text-yellow-800' :
             appointment.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-            appointment.status === 'done' ? 'bg-green-100 text-green-800' : ''  
+            appointment.status === 'done' ? 'bg-green-100 text-green-800' :  
+            appointment.status === 'in_session' ? 'bg-orange-100 text-orange-800' : ''  
           ]">
             {{ appointment.status }}
           </span>

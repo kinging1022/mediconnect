@@ -137,6 +137,7 @@
             this.isLoading = false
             this.$router.push('/dashboard')
             this.notificationStore.initWebSocket()
+            this.userStore.getActiveSession()
             this.toastStore.showToast(5000, `welcome back ${this.userStore.user.first_name}`, 'bg-blue-700 text-white');
 
 
