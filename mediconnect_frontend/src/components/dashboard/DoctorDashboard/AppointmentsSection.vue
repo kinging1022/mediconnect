@@ -34,6 +34,7 @@
                   Symptoms
                 </button> 
                 <button 
+                v-if="!sessionId"
                 @click="startSession(appointment.id)"
                 class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
                   <MessageSquare class="w-4 h-4" />
@@ -65,6 +66,7 @@
   
   <script>
   import { Calendar, Clock, MessageSquare } from 'lucide-vue-next';
+  import { useUserStore } from "@/stores/user";
   import axios from 'axios';
   export default {
     name: 'DoctorAppointments',
@@ -73,6 +75,10 @@
       Clock,
       MessageSquare,
     },
+    setup() {
+    const userStore = useUserStore();
+    return { userStore  };
+  },
     props: {
       appointments: {
         type: Array,
@@ -88,6 +94,13 @@
         isModalOpen: false,
         selectedSymptoms: '',
       }
+    },
+    computed:{
+      sessionId(){
+        return this.userStore.activeSession.id || null;
+
+      }
+
     },
     
     methods: {
@@ -106,6 +119,9 @@
             });
             if (response.status === 200) {
               this.$router.push(`/session/${response.data.id}`)
+
+              this.userStore.getActiveSession()
+              
             
             } 
 

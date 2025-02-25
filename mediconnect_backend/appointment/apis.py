@@ -79,8 +79,7 @@ class ConfirmFollowUp(APIView):
             appointment = Appointment.objects.get(pk=id)
             
             new_appointment = Appointment.objects.create(
-                symptoms = f'Follow up for last appointment {appointment.created_at.isoformat()}',
-                created_by = request.user,
+                symptoms = f'Follow up for last appointment {appointment.created_at.strftime("%B %d, %Y, %I:%M %p")}',
                 created_for = appointment.created_for,
                 status = Appointment.SENT
             )

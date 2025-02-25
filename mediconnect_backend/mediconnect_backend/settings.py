@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-from kombu import Queue, Exchange
 
 from pathlib import Path
 from datetime import timedelta
@@ -43,6 +42,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+AUTH_TOKEN = os.getenv('AUTH_TOKEN')
+ACCOUNT_SID = os.getenv('ACCOUNT_SID')
 
 # Application definition
 
@@ -89,26 +90,20 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'  
 
 
-# Define separate queues
-
-CELERY_TASK_QUEUES = (
-    Queue('ml_tasks', Exchange('celery', type='direct'), routing_key='ml_tasks.#'),
-    Queue('regular_tasks', Exchange('celery', type='direct'), routing_key='regular_tasks.#'),
-)
-
-# Add routing to specify which tasks go to which queues
-CELERY_TASK_ROUTES = {
-    'appointment.ml_tasks.*': {'queue': 'ml_tasks'},
-    # Add other task routes for regular_tasks here
-    'your.regular.tasks.*': {'queue': 'regular_tasks'},
-}
-
-
 CELERY_BEAT_SCHEDULE = {
     'process-appointment': {
         'task': 'appointment.ml_tasks.process_appointments',
         'schedule': crontab(minute="*/1"),  
         'options': {'queue': 'ml_tasks'}
+    },
+
+    'send-daily-reminder':{
+        'task': 'reminder.regular_tasks.send_daily_reminders',
+        'schedule': crontab(minute="*/1")
+    },
+    'reset-sent-status': {
+        'task': 'reminder.regular_tasks.reset_sent_status',
+        'schedule': crontab(hour=0, minute=0), 
     },
     
     
@@ -142,6 +137,7 @@ INSTALLED_APPS = [
     'appointment',
     'notification',
     'session',
+    'reminder',
 
     #Channels
     "channels",

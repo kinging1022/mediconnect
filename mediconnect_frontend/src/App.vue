@@ -24,7 +24,9 @@
 
         <div class="flex items-center space-x-4">
           <RouterLink to="/notifications">
-          <div class="relative">
+          <div class="relative"
+          v-if="userStore.user.isAuthenticated"
+          >
             <Bell :size="24" class="text-gray-600 hover:text-blue-600 cursor-pointer" />
             <div v-if="hasNotifications" class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
           </div>
@@ -32,7 +34,7 @@
           
           <RouterLink 
               v-if="sessionId"
-              :to="{ name: 'session', params: { id: sessionId } }"
+              :to="{ name: 'chat', params: { id: sessionId } }"
             >
               <div class="relative">
                 <User :size="24" class="text-gray-600 hover:text-blue-600 cursor-pointer" />

@@ -41,7 +41,9 @@
           >
               Book Appointment
           </RouterLink>
-          <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">Chat with AI Doctor</button>
+          <RouterLink
+          to="/ai-doctor"
+           class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">Chat with AI Doctor</RouterLink>
           <button @click="$emit('logout')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Logout</button>
         </div>
       </div>

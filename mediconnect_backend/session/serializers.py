@@ -19,7 +19,7 @@ class SessionMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DoctorSessionMessage
-        fields = ('id','created_by', 'created_at_formatted','body','type','get_image','get_video',)
+        fields = ('id','created_by', 'created_at_formatted','body','type','get_file')
 
       
 

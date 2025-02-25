@@ -1,3 +1,4 @@
+
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -6,6 +7,8 @@ from appointment.models import Appointment
 from notification.utils import create_notification
 from notification.models import Notification
 from django.db import transaction
+from rest_framework.parsers import MultiPartParser, FormParser
+
 from .serializers import SessionDetailSerializer, SessionMessageSerializer
 
 
@@ -29,7 +32,7 @@ class GetOrCreateSession(APIView):
             patient = appointment.created_by
 
 
-            session = DoctorSession.objects.filter(users=doctor).filter(users=doctor).distinct()
+            session = DoctorSession.objects.filter(users=doctor).filter(users=patient).distinct()
 
             if session.exists():
                 session = session.first()
@@ -37,6 +40,7 @@ class GetOrCreateSession(APIView):
 
                 session.save()
 
+            
             else:
                 session = DoctorSession.objects.create(appointment=appointment)
                 session.users.add(patient, doctor)
@@ -169,3 +173,93 @@ class AddFollowup(APIView):
 
         return Response({'message':f'Dr {appointment.created_for.first_name} added follow up to this appointment , it will be valid for 30 days'}, status=status.HTTP_201_CREATED)
         
+
+
+
+class SessionHistory(APIView):
+    def get(self,request):
+        sessions = DoctorSession.objects.filter(users=request.user, status=DoctorSession.ENDED)
+
+        serializer = SessionDetailSerializer(sessions, many=True)
+
+        return Response(serializer.data,status=status.HTTP_200_OK)
+    
+
+
+class ViewSession(APIView):
+    def get(self,request):
+        
+        session_id = request.GET.get('sessionId')
+
+        try:
+            doctor_session = DoctorSession.objects.get(pk=session_id)
+
+        except DoctorSession.DoesNotExist:
+            return Response({'error':'session not found'},status=status.HTTP_400_BAD_REQUEST)
+    
+        serializer = SessionDetailSerializer(doctor_session)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+class UploadFile(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def post(self, request, session_id):
+        print(f"Upload request received for session {session_id}")
+        print(f"Request data: {request.data}")
+        print(f"Request FILES: {request.FILES}")
+        
+        try:
+            session = DoctorSession.objects.get(id=session_id)
+        except DoctorSession.DoesNotExist:
+            return Response({"error": "Session not found"}, status=404)
+        
+        # Get files from request.FILES
+        files = request.FILES
+        
+        if not files:
+            return Response({"error": "No files uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Process each file
+        processed_files = []
+        for file_key in files:
+            file = files[file_key]
+            
+            # Determine message type based on file mime type
+            mime_type = file.content_type
+            print(f"Processing file: {file.name}, type: {mime_type}")
+            
+            if mime_type.startswith('video/'):
+                message_type = 'video'
+            elif mime_type.startswith('image/'):
+                message_type = 'image'
+            else:
+                print(f"Unsupported file type: {mime_type}")
+                continue
+            
+            # Create message with file
+            message = DoctorSessionMessage.objects.create(
+                doctor_session=session,
+                body=request.data.get('message', ''),
+                created_by=request.user,
+                type=message_type,
+                file=file
+            )
+            
+            serializer = SessionMessageSerializer(message)
+            processed_files.append(serializer.data)
+            print(f"Created message: {message.id}")
+        
+        if not processed_files:
+            return Response({"error": "No valid files processed"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Return all processed files
+        response_data = {
+            "message": "Files uploaded successfully",
+            "files": processed_files
+        }
+        print(f"Response data: {response_data}")
+        return Response(response_data, status=status.HTTP_201_CREATED)

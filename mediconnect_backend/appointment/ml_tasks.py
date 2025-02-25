@@ -1,7 +1,15 @@
+import os
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import logging
 import numpy as np
 import faiss
 from celery import shared_task
+
 from sentence_transformers import SentenceTransformer
 from .models import Appointment
 from account.models import User
@@ -15,6 +23,9 @@ from channels.layers import get_channel_layer
 from .serializers import AppointmentSerializer
 
 logger = logging.getLogger(__name__)
+
+
+
 
 # Thread-local storage for model
 _thread_local = threading.local()
@@ -88,6 +99,8 @@ def find_best_doctor(symptoms):
     finally:
         gc.collect()
         torch.cuda.empty_cache()
+
+
 
 @shared_task(
     bind=True,

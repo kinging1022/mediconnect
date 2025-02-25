@@ -134,6 +134,7 @@
             console.log(response.data)
             this.userStore.setToken(response.data)
             await this.fetchUser()
+            await this.updateTimezone()
             this.isLoading = false
             this.$router.push('/dashboard')
             this.notificationStore.initWebSocket()
@@ -191,6 +192,16 @@
         console.error("Login failed", error);
       }
     },
+    async updateTimezone() {
+      try {
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          this.timezone = timezone;
+
+          await axios.post('user/update-timezone/', { timezone });
+      } catch (error) {
+        console.error(error)
+      }
+  },
 
     }
   }

@@ -9,7 +9,10 @@ import PasswordReset from '@/views/PasswordReset.vue'
 import UpdateProfileView from '@/views/updateProfileView.vue'
 import AppointmentView from '@/views/AppointmentView.vue'
 import NotificationView from '@/views/NotificationView.vue'
-import ChatSessionView from '@/views/ChatSessionView.vue'
+import ConsultationHistoryView from '@/views/ConsultationHistoryView.vue'
+import AiChatView from '@/views/AiChatView.vue'
+import CallView from '@/views/CallView.vue'
+import chatView from '@/views/chatView.vue'
 import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
@@ -74,9 +77,30 @@ const router = createRouter({
       component: NotificationView,
     },
     {
-      path: '/session/:id',
-      name: 'session',
-      component: ChatSessionView,
+      path: '/consultation-history/:id',
+      name: 'consultation-history',
+      component: ConsultationHistoryView,
+      meta: { requiresAuth: true, hideHeaderFooter: true }
+
+    },
+    {
+      path: '/ai-doctor',
+      name: 'ai-doctor',
+      component: AiChatView,
+      meta: { requiresAuth: true, hideHeaderFooter: true }
+
+    },
+    {
+      path: '/call',
+      name: 'call',
+      component: CallView,
+      meta: { requiresAuth: true, hideHeaderFooter: true }
+
+    },
+    {
+      path: '/session/chat/:id',
+      name: 'chat',
+      component: chatView,
       meta: { requiresAuth: true, hideHeaderFooter: true }
 
     },

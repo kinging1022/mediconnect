@@ -67,7 +67,7 @@ axios.interceptors.response.use(
       } catch (refreshError) {
         console.error("Session expired, redirecting to login:", refreshError);
         userStore.removeToken();
-        router.push('/login');
+        router.push('/');
         return Promise.reject(refreshError);
       }
     }

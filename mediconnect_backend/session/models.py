@@ -62,7 +62,7 @@ class DoctorSessionMessage(models.Model):
         (TEXT, 'Text'),
         (NOTIFICATION, 'Notification'),
         (IMAGE,'Image'),
-        (VIDEO,'Video')
+        (VIDEO, 'Video')
 
     )
 
@@ -70,8 +70,7 @@ class DoctorSessionMessage(models.Model):
     doctor_session = models.ForeignKey(DoctorSession, related_name='messages', on_delete=models.CASCADE)
     body = models.TextField()
     type = models.CharField(max_length=50, choices=MESSAGE_CHOICE, default=TEXT)
-    image = models.ImageField(upload_to='media/chat_images/', blank=True, null=True, validators=[validate_file])
-    video = models.FileField(upload_to='media/chat_videos/', blank=True, null=True, validators=[validate_file])
+    file = models.ImageField(upload_to='media/chat_files/', blank=True, null=True, validators=[validate_file])
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, related_name='sentmessages', on_delete=models.CASCADE)
 
@@ -79,15 +78,12 @@ class DoctorSessionMessage(models.Model):
         return format(localtime(instance.created_at), 'Y-m-d\TH:i:s\Z')
     
 
-    def get_image(self):
-        if self.image:
-            return "http://127.0.0.1:8000" + self.image.url
+    def get_file(self):
+        if self.file:
+            return "http://127.0.0.1:8000" + self.file.url
         
 
-    def get_video(self):
-        if self.video:
-           return "http://127.0.0.1:8000" + self.video.url
-
+   
 
 
     

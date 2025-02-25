@@ -10,6 +10,8 @@ from .serializers import SessionMessageSerializer
 from django.core.serializers.json import DjangoJSONEncoder
 from account.models import User
 from appointment.models import Appointment
+from notification.utils import create_notification
+from notification.models import Notification
 
 
 class CustomJSONEncoder(DjangoJSONEncoder):
@@ -74,6 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             
             if user.id not in session_user_ids:
                 return
+        
 
             # Check if session is already ended
             if await sync_to_async(lambda: session.status == "ended")():
@@ -81,6 +84,50 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "type": "error",
                     "message": "This session has already ended"
                 }))
+                return
+            
+            #handle media
+            if data.get("type") == "media":
+                try:
+                    # Get file information from the message
+                    file_id = data.get("file_id")
+                    
+                    # Find the message that was already created by the API view
+                    message = await sync_to_async(DoctorSessionMessage.objects.get)(id=file_id)
+                    
+                    # Get existing serialized data
+                    serialized_message = await sync_to_async(SessionMessageSerializer)(message)
+                    serialized_data = await sync_to_async(lambda: serialized_message.data)()
+                    
+                    # Broadcast the message to all users in the group
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "chat_message",
+                            "data": serialized_data
+                        }
+                    )
+                    return
+                except Exception as e:
+                    print(f"Error processing media message: {str(e)}")
+                    await self.send(text_data=await self.encode_json({
+                        "type": "error",
+                        "message": f"Failed to process media: {str(e)}"
+                    })) 
+                        
+            #handle is typing
+            if data.get("type") == "typing_indicator":
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "user_typing",  # Changed from typing_status
+                        "data": {
+                            "type": "typing_status",
+                            "user_id": str(user.id),
+                            "is_typing": data.get("is_typing", False)
+                        }
+                    }
+                )
                 return
 
             # Handle end session request
@@ -174,6 +221,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+            patient = await sync_to_async(lambda: session.users.exclude(id=user.id).filter(role='patient').first())()
+            if patient:
+                notification = await sync_to_async(create_notification)(user, patient, Notification.SESSION_STOP)
+
             # Log successful end session
             print(f"Session {self.session_id} ended successfully by {user.username}")
             
@@ -194,3 +245,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         """Handle regular chat messages"""
         await self.send(text_data=await self.encode_json(event))
+
+
+    async def user_typing(self, event):
+        """Handle typing status updates"""
+        await self.send(text_data=await self.encode_json(event["data"]))

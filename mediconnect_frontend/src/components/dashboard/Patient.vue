@@ -6,8 +6,16 @@
         <ProfileSection :patient="patient" @logout="logout" />
         <VitalsSection :vitals="patient.vitals" />
         <AppointmentsSection :appointments="appointments" :format-date="formatDate"/>
-        <MedicationsSection :medications="medications" />
+        <MedicationsSection :medications="medications" @medics="handleReminderOpen" />
         <ConsultationsSection :consultations="consultations" />
+
+
+        <ReminderModal
+         :is-open="isOpen"
+         :medication-id="medicationId"
+         @close="handleReminderClose"
+         @reminderSuccess="handleReminderSuccess"
+        />
       </div>
     </main>
   </div>
@@ -23,7 +31,9 @@ import VitalsSection from "./PatientDashboard/VitalsSection.vue";
 import AppointmentsSection from "./PatientDashboard/AppointmentsSection.vue";
 import MedicationsSection from './PatientDashboard/MedicationsSection.vue';
 import ConsultationsSection from "./PatientDashboard/ConsultationsSection.vue";
-
+import { useToastStore } from '@/stores/toast';
+import ReminderModal from '../modals/ReminderModal.vue';
+import axios from 'axios';
 export default {
   name: 'PatientDashboard',
   components: {
@@ -32,15 +42,19 @@ export default {
     AppointmentsSection,
     MedicationsSection,
     ConsultationsSection,
+    ReminderModal
   },
   setup() {
     const userStore = useUserStore();
     const appointmentStore = useAppointmentStore();
     const notificationStore = useNotificationStore();
-    return { userStore, appointmentStore, notificationStore };
+    const toastStore = useToastStore()
+    return { userStore, appointmentStore, notificationStore, toastStore };
   },
   mounted(){
     this.appointmentStore.initWebSocket()
+    this.getMedications(),
+    this.getSessionHistory()
 
   },
   computed:{
@@ -52,6 +66,13 @@ export default {
   data() {
     return {
       patient: this.getPatientData(),
+      medications: [],
+      consultations: [],
+      isOpen:false,
+      medicationId:null,
+
+
+
     };
   },
   methods: {
@@ -91,6 +112,53 @@ export default {
       } catch (error) {
         console.error('Date parsing error:', error);
         return 'Invalid Date';
+      }
+    },
+    async getMedications(){
+      try{
+
+        const response = await axios.get('account/medications/')
+        this.medications = response.data
+
+
+
+      }catch(error){
+          console.log(error)
+      }
+      
+
+    },
+    async getSessionHistory(){
+
+      try{
+          const response = await axios.get('session/history/')
+          this.consultations = response.data
+          
+      }catch(error){
+        console.log(error)
+
+      }
+
+
+      },
+      handleReminderOpen(medicationId) {
+      this.isOpen = true
+      this.medicationId = medicationId;
+      
+    },
+    handleReminderClose() {
+      this.isOpen = false
+      this.medicationId = null;
+      
+    },
+    handleReminderSuccess(medicationId) {
+      const medication = this.medications.find(med => med.id === medicationId);
+      if (medication) {
+        medication.has_reminder = true;
+        this.isOpen = false;
+        this.toastStore.showToast(5000, "Reminder set sucessfully", "bg-blue-500 text-white");
+      } else {
+        console.error(`Medication with ID ${medicationId} not found.`);
       }
     },
     logout() {

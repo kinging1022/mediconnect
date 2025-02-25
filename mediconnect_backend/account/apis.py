@@ -15,6 +15,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.hashers import check_password
 from django.core.mail import send_mail
+from session.models import Medications
+from session.serializers import MedicationsSerializer
 import uuid
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -326,3 +328,27 @@ class UpdateProfile(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
         
+
+
+class GetMedication(APIView):
+    def get(self,request):
+        medications = Medications.objects.filter(created_for=request.user)
+  
+        serializer = MedicationsSerializer(medications, many=True)
+        return Response(serializer.data)
+
+
+
+class UpdateTimezone(APIView):
+    def post(self, request):
+        time_zone = request.data.get('timezone')
+
+        user = request.user
+        user.timezone = time_zone
+        user.save()
+
+        return Response({'message': 'Timezone updated successfully'}, status=200)
+
+
+
+

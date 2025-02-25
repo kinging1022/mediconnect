@@ -13,6 +13,9 @@ urlpatterns = [
     path('activate/email/', apis.SendActivationEmail.as_view(), name='activate-email'),
     path('activate/', apis.ActivateEmail.as_view(), name='activate'),
     path("auth/google/", apis.GoogleAuthView.as_view(), name="google_auth"),
-    path("dashboard/profile/update/", apis.UpdateProfile.as_view(),name='update_profile')
+    path("dashboard/profile/update/", apis.UpdateProfile.as_view(),name='update_profile'),
+    path("account/medications/", apis.GetMedication.as_view(), name='get_medication'),
+    path('user/update-timezone/', apis.UpdateTimezone.as_view(), name='update_timezone'),
+
 
 ]
