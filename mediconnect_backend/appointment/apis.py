@@ -83,11 +83,21 @@ class ConfirmFollowUp(APIView):
                 created_for = appointment.created_for,
                 status = Appointment.SENT
             )
-            return Response({'messaage':'Follow appointment created'}, status=status.HTTP_200_OK)
+            return Response({'messaage':'Follow appointment created', 'appointment':new_appointment}, status=status.HTTP_200_OK)
 
         except Appointment.DoesNotExist:
             return Response({'error':'Appoinment not found'})
         
 
+
+class getRecentAppointments(APIView):
+
+    def get(self, request):
+
+        appointments = Appointment.objects.filter(created_for=request.user, status=Appointment.DONE)
+
+        serializer = AppointmentSerializer(appointments, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 

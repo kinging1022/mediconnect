@@ -70,7 +70,6 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 const token = this.$route.params.token;
 
-                console.log(token)
 
                 const response = await axios.post('activate/', {token:token }, { timeout: 5000 });
 

@@ -1,3 +1,7 @@
+import re
+
+from django.conf import settings
+from .RtcTokenBuilder2 import RtcTokenBuilder, Role_Publisher
 
 from rest_framework.views import APIView
 from rest_framework import status
@@ -8,6 +12,7 @@ from notification.utils import create_notification
 from notification.models import Notification
 from django.db import transaction
 from rest_framework.parsers import MultiPartParser, FormParser
+
 
 from .serializers import SessionDetailSerializer, SessionMessageSerializer
 
@@ -263,3 +268,66 @@ class UploadFile(APIView):
         }
         print(f"Response data: {response_data}")
         return Response(response_data, status=status.HTTP_201_CREATED)
+    
+
+
+
+
+
+class GetAgoraToken(APIView):
+
+    def get(self, request):
+        session_id = request.GET.get('sessionId')
+
+        app_id = settings.AGORA_APP_ID
+        app_certificate = settings.AGORA_APP_CERTIFICATE
+
+        channel_name = self.sanitize_channel_name(session_id)
+        uid = int(request.user.id) % 10000  # Ensure uid is within 0–10000
+        account = str(request.user.id)[:255] 
+        token_expiration_in_seconds = 3600
+        privilege_expiration_in_seconds = 3600
+        join_channel_privilege_expiration_in_seconds = 3600
+        pub_audio_privilege_expiration_in_seconds = 3600
+        pub_video_privilege_expiration_in_seconds = 3600
+        pub_data_stream_privilege_expiration_in_seconds = 3600
+
+        print("App Id: %s" % app_id)
+        print("App Certificate: %s" % app_certificate)
+
+        if not app_id or not app_certificate:
+            print("Need to set environment variable for Agora app")
+            return Response({'error': 'Need to set environment variable for Agora app'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate tokens
+        token_with_uid = RtcTokenBuilder.build_token_with_uid(
+            app_id, app_certificate, channel_name, uid, Role_Publisher,
+            token_expiration_in_seconds, privilege_expiration_in_seconds
+        )
+        print("Token with int uid: {}".format(token_with_uid))
+
+
+        token_with_uid_and_privilege = RtcTokenBuilder.build_token_with_uid_and_privilege(
+            app_id, app_certificate, channel_name, uid, token_expiration_in_seconds,
+            join_channel_privilege_expiration_in_seconds, pub_audio_privilege_expiration_in_seconds,
+            pub_video_privilege_expiration_in_seconds, pub_data_stream_privilege_expiration_in_seconds
+        )
+        print("Token with int uid and privilege: {}".format(token_with_uid_and_privilege))
+
+    
+
+        
+
+        # Return one of the tokens (e.g., token_with_account)
+        return Response({'token': token_with_uid_and_privilege, 'uid':uid, 'channel':channel_name}, status=status.HTTP_200_OK)
+    
+
+    def sanitize_channel_name(self, session_id):
+        """
+        Sanitize the session_id to make it a valid Agora channel name.
+        """
+        # Remove invalid characters
+        sanitized = re.sub(r'[^a-zA-Z0-9!@#$%^&*()\-_+=;:,.?|~`\[\]{}<>]', '', session_id)
+        
+        # Truncate to 64 characters
+        return sanitized[:64]

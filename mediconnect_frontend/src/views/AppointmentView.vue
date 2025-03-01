@@ -261,7 +261,6 @@
       async handleConfirmFollowUp(followUp) {
         try{
             this.selectedFollowUp = followUp
-            console.log(followUp)
             this.status = 'checking'
             this.isProcessing = true
             await new Promise(resolve => setTimeout(resolve, 1500))

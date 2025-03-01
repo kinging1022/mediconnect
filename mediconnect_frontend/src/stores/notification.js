@@ -42,7 +42,6 @@ export const useNotificationStore = defineStore('notification', {
           case 'new_notification':
             this.addNewNotification(data.data);
             if (data.data.type_of_notification === 'session_start') {
-              console.log(data.data.type_of_notification);
               this.userStore.getActiveSession(); 
             }
             this.notificationType = data.data.type_of_notification;

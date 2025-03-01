@@ -17,12 +17,7 @@
         >
           <video-icon size="20" />
         </button>
-        <button
-          class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-          @click="$emit('audioCall')"
-        >
-          <phone-icon size="20" />
-        </button>
+        
         <button
           class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
           @click="$emit('toggleModal')"
@@ -49,7 +44,7 @@
       doctor: {
         type: Object,
         required: true,
-        default: () => ({ first_name: '', last_name: '' }), // Default values
+        default: () => ({ first_name: '', last_name: '' }), 
         validator: (prop) => {
           return prop.hasOwnProperty('first_name') && prop.hasOwnProperty('last_name');
         },
@@ -57,7 +52,7 @@
       patient: {
         type: Object,
         required: true,
-        default: () => ({ first_name: '', last_name: '' }), // Default values
+        default: () => ({ first_name: '', last_name: '' }), 
         validator: (prop) => {
           return prop.hasOwnProperty('first_name') && prop.hasOwnProperty('last_name');
         },

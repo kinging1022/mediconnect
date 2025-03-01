@@ -34,6 +34,8 @@
         </div>
         <div class="flex flex-wrap justify-center md:justify-end gap-2 mt-4 md:mt-0">
           <RouterLink :to="{ name: 'update-profile' }" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">Edit Profile</RouterLink>
+
+          <button @click="$emit('logout')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Logout</button>
           <RouterLink
             :to="latestAppointment && latestAppointment.status !== 'done' ? null : { name: 'appointment' }"
             :class="{ 'disabled-link': latestAppointment && latestAppointment.status !== 'done' }"
@@ -41,10 +43,6 @@
           >
               Book Appointment
           </RouterLink>
-          <RouterLink
-          to="/ai-doctor"
-           class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">Chat with AI Doctor</RouterLink>
-          <button @click="$emit('logout')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Logout</button>
         </div>
       </div>
     </div>

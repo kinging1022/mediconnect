@@ -1,12 +1,14 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DoctorProfileSection :doctor="doctor" @logout="logout" />
-        <AppointmentsSection :appointments="appointments" :format-date="formatDate"  />
-        <PatientsSection :patients="patients" />
-        <ScheduleSection :schedule="schedule" />
+
+        <!-- Grid Layout for Appointments and Patients -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <AppointmentsSection :appointments="appointments" :format-date="formatDate" />
+          <PatientsSection :recent-appointments="recentAppointments" :format-date="formatDate" />
+        </div>
       </div>
     </main>
   </div>
@@ -20,15 +22,14 @@ import { useAppointmentStore } from "@/stores/appointment";
 import DoctorProfileSection from "./DoctorDashboard/DoctorProfileSection.vue";
 import AppointmentsSection from "./DoctorDashboard/AppointmentsSection.vue";
 import PatientsSection from "./DoctorDashboard/PatientsSection.vue";
-import ScheduleSection from "./DoctorDashboard/ScheduleSection.vue";
-
+import axios from 'axios';
 export default {
   name: 'DoctorDashboard',
   components: {
     DoctorProfileSection,
     AppointmentsSection,
     PatientsSection,
-    ScheduleSection,
+    
   },
   setup() {
     const userStore = useUserStore();
@@ -37,6 +38,8 @@ export default {
   },
   mounted(){
     this.appointmentStore.initWebSocket()
+    this.getRecentAppointments()
+
   },
   computed:{
     appointments(){
@@ -50,6 +53,7 @@ export default {
   data() {
     return {
       doctor: this.getDoctorData(),
+      recentAppointments: []
       
     };
   },
@@ -71,6 +75,17 @@ export default {
         console.error('Date parsing error:', error);
         return 'Invalid Date';
       }
+    },
+    async getRecentAppointments(){
+      try{
+
+        const response = await axios.get('recent/appointments/')
+        this.recentAppointments = response.data
+
+      }catch(error){
+        console.error(error)
+      }
+
     },
     logout() {
       this.userStore.removeToken();

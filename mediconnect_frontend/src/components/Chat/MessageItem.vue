@@ -69,17 +69,14 @@
       messageClasses() {
         const baseClasses = 'max-w-[80%] rounded-lg px-4 py-2'
         
-        // Notification messages
         if (this.message.type === 'notification') {
           return `${baseClasses} bg-amber-500 w-full max-w-[90%] mx-auto text-center shadow-sm`
         }
         
-        // Patient messages (blue background, white text, rounded on the right)
         if (this.message.created_by.role === 'patient') {
           return `${baseClasses} bg-blue-500 text-white rounded-tr-none`
         }
         
-        // Doctor messages (gray background, rounded on the left)
         return `${baseClasses} bg-gray-100 rounded-tl-none`
       }
     }

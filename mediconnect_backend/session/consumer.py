@@ -85,6 +85,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": "This session has already ended"
                 }))
                 return
+
+            #handle call notification
+            if data.get("type") == 'call_notification_indicator':
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    
+                    {
+                        "type": "call_notification",
+                        
+                         "data":{
+                             "type" : "call_notification_status",
+                            "incoming_call": True,
+                            "user_id": str(user.id)
+                             
+                         }
+                        
+                    
+                    }
+                )
+                return
             
             #handle media
             if data.get("type") == "media":
@@ -249,4 +269,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def user_typing(self, event):
         """Handle typing status updates"""
+        await self.send(text_data=await self.encode_json(event["data"]))
+
+    async def call_notification(self,event):
+        """Handle call status updates"""
         await self.send(text_data=await self.encode_json(event["data"]))

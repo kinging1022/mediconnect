@@ -161,7 +161,7 @@
       handleKeyPress(e) {
         if (e.key === 'Enter' && !e.shiftKey && !this.sessionEnded) {
           e.preventDefault();
-          this.handleSubmit(); // Call handleSubmit directly instead of emitting 'send'
+          this.handleSubmit(); 
         }
       },
       handleInput(e) {
@@ -175,7 +175,6 @@
       // Typing indicator
       startTyping() {
         if (!this.isTyping) {
-          console.log('Emitting typing start'); // Debug log
           this.isTyping = true;
           this.$emit('typing', true);
         }
@@ -188,7 +187,6 @@
       },
       stopTyping() {
         if (this.isTyping) {
-          console.log('Emitting typing stop'); // Debug log
           this.isTyping = false;
           this.$emit('typing', false);
           if (this.typingTimeout) {

@@ -4,7 +4,6 @@
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfileSection :patient="patient" @logout="logout" />
-        <VitalsSection :vitals="patient.vitals" />
         <AppointmentsSection :appointments="appointments" :format-date="formatDate"/>
         <MedicationsSection :medications="medications" @medics="handleReminderOpen" />
         <ConsultationsSection :consultations="consultations" />
@@ -27,7 +26,6 @@ import { useUserStore } from "@/stores/user";
 import { useAppointmentStore } from "@/stores/appointment";
 import { useNotificationStore } from '@/stores/notification';
 import ProfileSection from "./PatientDashboard/ProfileSection.vue";
-import VitalsSection from "./PatientDashboard/VitalsSection.vue";
 import AppointmentsSection from "./PatientDashboard/AppointmentsSection.vue";
 import MedicationsSection from './PatientDashboard/MedicationsSection.vue';
 import ConsultationsSection from "./PatientDashboard/ConsultationsSection.vue";
@@ -38,7 +36,6 @@ export default {
   name: 'PatientDashboard',
   components: {
     ProfileSection,
-    VitalsSection,
     AppointmentsSection,
     MedicationsSection,
     ConsultationsSection,

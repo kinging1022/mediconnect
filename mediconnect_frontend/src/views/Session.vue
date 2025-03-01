@@ -1,40 +1,53 @@
 <template>
-    <div class="flex flex-col h-screen w-full bg-white">
-      <ChatHeader
-        :doctor="doctor"
-        :patient="patient"
-        :user-store="userStore"
-        @toggleModal="isModalOpen = !isModalOpen"
-      />
-      <ChatMessage
-        :messages="messages"
-        :isTyping="isTyping"
-      />
-      <ChatInput
-        v-model="newMessage"
-        :session-ended="sessionEnded"
-        @send="sendChatMessage"
-        @typing="handleTyping"
-      />
-  
-      <OptionModal
-        v-if="isModalOpen"
-        @close="isModalOpen = false"
-        @addMedication="openMedicationModal"
-        @createFollowup="handleCreateFollowup"
-        @endSession="endSession"
-      />
-  
-      <MedicationModal
-        v-if="isMedicationModalOpen"
-        :medications="medications"
-        @close="isMedicationModalOpen = false"
-        @add-medication="handleAddMedication"
-        @remove-medication="handleRemoveMedication"
-        @change-medication="handleMedicationChange"
-        @submit-medications="handleSubmitMedications"
-      />
+    <div v-if="state === 'chat'">
+        <div class="flex flex-col h-screen w-full bg-white">
+            <ChatHeader
+                :doctor="doctor"
+                :patient="patient"
+                :user-store="userStore"
+                @toggleModal="isModalOpen = !isModalOpen"
+                @videoCall = "startCall"
+            />
+            <ChatMessage
+                :messages="messages"
+                :isTyping="isTyping"
+            />
+            <ChatInput
+                v-model="newMessage"
+                :session-ended="sessionEnded"
+                @send="sendChatMessage"
+                @typing="handleTyping"
+            />
+        
+            <OptionModal
+                v-if="isModalOpen"
+                @close="isModalOpen = false"
+                @addMedication="openMedicationModal"
+                @createFollowup="handleCreateFollowup"
+                @endSession="endSession"
+            />
+        
+            <MedicationModal
+                v-if="isMedicationModalOpen"
+                :medications="medications"
+                @close="isMedicationModalOpen = false"
+                @add-medication="handleAddMedication"
+                @remove-medication="handleRemoveMedication"
+                @change-medication="handleMedicationChange"
+                @submit-medications="handleSubmitMedications"
+            />
+            <CallNotification  :doctor="doctor" :user-store="userStore" :show="showIncommingCall" @accept="handleAccept" @decline=" handleEndCall"/>
+
+        </div>
+        
+
     </div>
+
+    <div v-if="state === 'call'">
+        <WaitingRoom v-if="callState === 'dialing'":patient = "patient"/>
+        <VideoCall v-if="callState === 'incall'"   :token="callToken"  :uid="callUid" :channel="channelName" @end-call="handleEndCall"/>
+    </div>
+    
   </template>
   
   <script>
@@ -43,8 +56,12 @@
   import ChatInput from '@/components/Chat/Chatinput.vue';
   import OptionModal from '@/components/Chat/OptionModal.vue';
   import MedicationModal from '@/components/Chat/MedicationModal.vue';
+  import WaitingRoom from '@/components/Call/WaitingRoom.vue'
+  import CallNotification from '@/components/Call/CallNotification.vue';
   import { useUserStore } from '@/stores/user';
   import { useToastStore } from '@/stores/toast';
+  import VideoCall from '@/components/Call/VideoCall.vue';
+
   import axios from 'axios';
   
   export default {
@@ -54,7 +71,11 @@
       ChatMessage,
       ChatInput,
       OptionModal,
+      WaitingRoom,
+      CallNotification,
       MedicationModal,
+      VideoCall
+
     },
     setup() {
       const userStore = useUserStore();
@@ -66,6 +87,12 @@
     },
     data() {
       return {
+        state: 'chat',
+        callState: null,
+        callToken: null,
+        callUid: null,
+        channelName:null,
+        showIncommingCall: false,
         messages: [],
         isTyping: false,
         isModalOpen: false,
@@ -157,6 +184,10 @@
           const data = JSON.parse(event.data);
   
           switch (data.type) {
+            case 'call_notification_status':
+                if(data.user_id !== this.userStore.user.id){
+                    this.showIncommingCall = data.incoming_call
+                }
             case 'typing_status':
               if (data.user_id !== this.userStore.user.id) {
                 this.isTyping = data.is_typing;
@@ -437,6 +468,60 @@
   
         this.$emit('session-ended');
       },
+      async startCall(){
+        this.state = 'call'
+        this.callState = 'dialing'
+        await this.getCallToken()
+        setTimeout(() => {
+                this.sendWebSocketMessage({
+                type : 'call_notification_indicator',
+                message: 'Call Notification'
+            })
+        }, 2000);
+
+        
+       
+      },
+      async getCallToken() {
+        try {
+            const response = await axios.get('session/agora/token/', {
+                params: {
+                    sessionId: this.sessionId,
+                },
+            });
+
+            if (response.status === 200) {
+                console.log(response.data);
+                console.log(response.data.token);
+                console.log(response.data.uid);
+                console.log(response.data.channel)
+
+                const uid = response.data.uid;
+                if (typeof uid === 'number' && uid >= 0 && uid <= 10000) {
+                    this.callToken = response.data.token;
+                    this.channelName = response.data.channel
+                    this.callUid = uid;
+                    setTimeout(() => {
+                        this.callState = 'incall';
+                    }, 2000);
+                } else {
+                    console.error('Invalid uid:', uid);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+      },
+      async handleAccept(){
+        this.showIncommingCall =  false
+        this.state = 'call'
+        await this.getCallToken()
+
+      },
+      handleEndCall(){
+        this.showIncommingCall =  false
+        this.state = 'chat'
+      }
     },
   };
   </script>

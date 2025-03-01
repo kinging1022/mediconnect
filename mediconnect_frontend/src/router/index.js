@@ -10,10 +10,8 @@ import UpdateProfileView from '@/views/updateProfileView.vue'
 import AppointmentView from '@/views/AppointmentView.vue'
 import NotificationView from '@/views/NotificationView.vue'
 import ConsultationHistoryView from '@/views/ConsultationHistoryView.vue'
-import AiChatView from '@/views/AiChatView.vue'
-import CallView from '@/views/CallView.vue'
-import chatView from '@/views/chatView.vue'
 import { useUserStore } from '@/stores/user'
+import Session from '@/views/Session.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +43,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
+      meta: { requiresAuth: true}
     },
     {
       path: '/acount/activate/:token',
@@ -65,16 +64,19 @@ const router = createRouter({
       path: '/dashboard/profile/update',
       name: 'update-profile',
       component: UpdateProfileView,
+      meta: { requiresAuth: true}
     },
     {
       path: '/dashboard/appointment',
       name: 'appointment',
       component: AppointmentView,
+      meta: { requiresAuth: true}
     },
     {
       path: '/notifications',
       name: 'notification',
       component: NotificationView,
+      meta: { requiresAuth: true}
     },
     {
       path: '/consultation-history/:id',
@@ -84,23 +86,9 @@ const router = createRouter({
 
     },
     {
-      path: '/ai-doctor',
-      name: 'ai-doctor',
-      component: AiChatView,
-      meta: { requiresAuth: true, hideHeaderFooter: true }
-
-    },
-    {
-      path: '/call',
-      name: 'call',
-      component: CallView,
-      meta: { requiresAuth: true, hideHeaderFooter: true }
-
-    },
-    {
       path: '/session/chat/:id',
       name: 'chat',
-      component: chatView,
+      component: Session,
       meta: { requiresAuth: true, hideHeaderFooter: true }
 
     },

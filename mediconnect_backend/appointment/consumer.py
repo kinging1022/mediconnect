@@ -54,7 +54,6 @@ class AppointmentConsumer(AsyncWebsocketConsumer):
     
     
     def get_appointments(self, doctor_id, patient_id):
-        """ Fetch appointments synchronously in a separate thread """
         if doctor_id:
             return list(Appointment.objects.filter(created_for=doctor_id, status=Appointment.PROCESSED).all())
         elif patient_id:
@@ -63,7 +62,6 @@ class AppointmentConsumer(AsyncWebsocketConsumer):
 
     
     def serialize_appointments(self, appointments):
-        """ Serialize appointments synchronously """
         return AppointmentSerializer(appointments, many=True).data
 
     

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import axios from "axios";
 
+
 export const useUserStore = defineStore("user", {
   state: () => ({
     user: {
@@ -47,6 +48,7 @@ export const useUserStore = defineStore("user", {
     setUserInfo(user) {
       this.user = { ...this.user, ...user };
       this.saveUserToLocalStorage();
+      console.log("set user info success")
     },
 
     removeToken() {
@@ -130,6 +132,15 @@ export const useUserStore = defineStore("user", {
     saveUserToLocalStorage() {
       localStorage.setItem("user", JSON.stringify(this.user));
     },
+    async fetchUser() {
+      try {
+        const response = await axios.get('user/info/');
+        this.setUserInfo(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    
     
   },
 });

@@ -2,7 +2,7 @@ import jwt
 import datetime
 from urllib.parse import quote
 import requests
-
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -52,7 +52,12 @@ class SignupView(APIView):
                 )
         except ValidationError as e:
             return Response({'detail': e.detail}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
 
 
 class SendActivationEmail(APIView):
