@@ -24,7 +24,7 @@ Backend (Django + DRF)
 	•	Django REST Framework (DRF) – API development.
 	•	Django Channels – WebSockets for real-time chat & video calls.
 	•	Celery + Redis – Background tasks (notifications, AI processing).
-	•	FAISS + OpenAI – AI-powered doctor matching via vector search.
+	•	FAISS + Sentence Transformer – AI-powered doctor matching via vector search.
 	•	JWT Authentication – Secure user sessions.
 
 Frontend (Vue.js + Pinia)
