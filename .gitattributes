@@ -1,2 +1,6 @@
 *.py linguist-detectable=true
+*.html linguist-detectable=true
+*.js linguist-detectable=true
 *.vue linguist-detectable=true
+
+backend/* linguist-detectable=true
